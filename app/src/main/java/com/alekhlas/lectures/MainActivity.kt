@@ -1,88 +1,153 @@
 package com.alekhlas.lectures
 
-import android.annotation.SuppressLint
+import android.app.Activity
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
 
 data class Lecture(val title:String,val videoId:String)
-private val lectures=listOf(
- Lecture("محاضرة قوانين السير","rMVZwpDlARo"),
- Lecture("محاضرة الميكانيكا","sKbqPG386-c"),
- Lecture("محاضرة الإشارات","P_EMWF63d_o")
-)
-private val Blue=Color(0xFF0B2BE0)
-private val Orange=Color(0xFFFF6A00)
-private val Background=Color(0xFFF5F7FF)
-private val Ink=Color(0xFF0E1330)
 
-class MainActivity:ComponentActivity(){
- override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContent{App()}}
-}
+class MainActivity : Activity() {
+    private val lectures = listOf(
+        Lecture("محاضرة قوانين السير","rMVZwpDlARo"),
+        Lecture("محاضرة الميكانيكا","sKbqPG386-c"),
+        Lecture("محاضرة الإشارات","P_EMWF63d_o")
+    )
+    private val blue = Color.rgb(11,43,224)
+    private val orange = Color.rgb(255,106,0)
+    private val bg = Color.rgb(245,247,255)
 
-@Composable private fun App(){
- CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl){
-  MaterialTheme(colorScheme=lightColorScheme(primary=Blue,secondary=Orange,background=Background,surface=Color.White,onBackground=Ink,onSurface=Ink)){
-   var selected by remember{mutableStateOf<Lecture?>(null)}
-   if(selected==null) LectureList{selected=it} else Player(selected!!){selected=null}
-  }
- }
-}
-
-@Composable private fun LectureList(onOpen:(Lecture)->Unit){
- Scaffold(topBar={CenterAlignedTopAppBar(title={Column(horizontalAlignment=Alignment.CenterHorizontally){Text("مدرسة الإخلاص",fontWeight=FontWeight.ExtraBold);Text("المحاضرات التعليمية",style=MaterialTheme.typography.labelMedium)}})}){p->
-  LazyColumn(Modifier.fillMaxSize().background(Background).padding(p),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-   item{Text("أهلًا بك في تطبيق المحاضرات",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold);Text("اختر المحاضرة التي تريد مشاهدتها",color=Color.Gray,modifier=Modifier.padding(vertical=8.dp))}
-   items(lectures){lecture->
-    Card(Modifier.fillMaxWidth().clickable{onOpen(lecture)},elevation=CardDefaults.cardElevation(4.dp)){
-     Row(Modifier.fillMaxWidth().padding(18.dp),verticalAlignment=Alignment.CenterVertically){
-      Icon(Icons.Filled.PlayCircle,null,tint=Blue,modifier=Modifier.size(48.dp));Spacer(Modifier.width(14.dp))
-      Text(lecture.title,fontWeight=FontWeight.Bold,style=MaterialTheme.typography.titleMedium)
-     }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        showList()
     }
-   }
-  }
- }
-}
 
-@SuppressLint("SetJavaScriptEnabled")
-@Composable private fun Player(lecture:Lecture,onBack:()->Unit){
- Scaffold(topBar={TopAppBar(title={Text(lecture.title,maxLines=1)},navigationIcon={IconButton(onClick=onBack){Icon(Icons.Filled.ArrowBack,"رجوع")}})}){p->
-  Column(Modifier.fillMaxSize().padding(p).background(Color.Black)){
-   AndroidView(Modifier.fillMaxWidth().aspectRatio(16f/9f),factory={context->
-    WebView(context).apply{
-     setBackgroundColor(android.graphics.Color.BLACK)
-     settings.javaScriptEnabled=true
-     settings.domStorageEnabled=true
-     settings.mediaPlaybackRequiresUserGesture=false
-     webViewClient=WebViewClient();webChromeClient=WebChromeClient()
-     loadDataWithBaseURL("https://www.youtube.com",htmlFor(lecture.videoId),"text/html","UTF-8",null)
+    private fun baseLayout() = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundColor(bg)
+        layoutDirection = View.LAYOUT_DIRECTION_RTL
+        textDirection = View.TEXT_DIRECTION_RTL
     }
-   })
-   Text("يحتاج تشغيل المحاضرة إلى اتصال بالإنترنت.",color=Color.White,modifier=Modifier.padding(16.dp))
-  }
- }
-}
 
-private fun htmlFor(id:String)= """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#p{margin:0;width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="p"></div><script>var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);function onYouTubeIframeAPIReady(){new YT.Player('p',{videoId:'$id',playerVars:{playsinline:1,controls:1,rel:0,fs:1}});}</script></body></html>""".trimIndent()
+    private fun titleBar(title:String, subtitle:String? = null): LinearLayout {
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(24,22,24,22)
+            setBackgroundColor(Color.WHITE)
+        }
+        val t = TextView(this).apply {
+            text = title
+            textSize = 22f
+            setTextColor(Color.rgb(14,19,48))
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+        }
+        bar.addView(t, LinearLayout.LayoutParams(-1,-2))
+        if (subtitle != null) {
+            val s = TextView(this).apply {
+                text = subtitle
+                textSize = 14f
+                setTextColor(Color.DKGRAY)
+                gravity = Gravity.CENTER
+            }
+            bar.addView(s, LinearLayout.LayoutParams(-1,-2))
+        }
+        return bar
+    }
+
+    private fun showList() {
+        val root = baseLayout()
+        root.addView(titleBar("مدرسة الإخلاص","المحاضرات التعليمية"))
+        val scroll = android.widget.ScrollView(this)
+        val list = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24,24,24,24)
+        }
+        val intro = TextView(this).apply {
+            text = "أهلًا بك في تطبيق المحاضرات\nاختر المحاضرة التي تريد مشاهدتها"
+            textSize = 20f
+            setTextColor(Color.rgb(14,19,48))
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.RIGHT
+            setPadding(0,0,0,24)
+        }
+        list.addView(intro)
+        lectures.forEachIndexed { index, lecture ->
+            val b = Button(this).apply {
+                text = "▶  المحاضرة " + (index + 1) + "\n" + lecture.title
+                textSize = 17f
+                setTextColor(Color.WHITE)
+                setBackgroundColor(if(index % 2 == 0) blue else orange)
+                setPadding(20,18,20,18)
+                gravity = Gravity.CENTER
+                isAllCaps = false
+                setOnClickListener { showPlayer(lecture) }
+            }
+            val lp = LinearLayout.LayoutParams(-1,130)
+            lp.setMargins(0,0,0,18)
+            list.addView(b,lp)
+        }
+        scroll.addView(list)
+        root.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
+        setContentView(root)
+    }
+
+    private fun showPlayer(lecture:Lecture) {
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.BLACK)
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        val top = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundColor(Color.WHITE)
+            setPadding(8,8,16,8)
+        }
+        val back = Button(this).apply {
+            text = "رجوع"
+            isAllCaps = false
+            setOnClickListener { showList() }
+        }
+        top.addView(back,LinearLayout.LayoutParams(90,60))
+        val title = TextView(this).apply {
+            text = lecture.title
+            textSize = 18f
+            setTypeface(null,Typeface.BOLD)
+            setTextColor(Color.rgb(14,19,48))
+            gravity = Gravity.CENTER
+        }
+        top.addView(title,LinearLayout.LayoutParams(0,60,1f))
+        root.addView(top)
+        val web = WebView(this).apply {
+            setBackgroundColor(Color.BLACK)
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.mediaPlaybackRequiresUserGesture = false
+            webViewClient = WebViewClient()
+            webChromeClient = WebChromeClient()
+            loadDataWithBaseURL("https://www.youtube.com", htmlFor(lecture.videoId), "text/html", "UTF-8", null)
+        }
+        root.addView(web,LinearLayout.LayoutParams(-1,0,1f))
+        val note = TextView(this).apply {
+            text = "يحتاج تشغيل المحاضرة إلى اتصال بالإنترنت."
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setPadding(18,12,18,18)
+            gravity = Gravity.CENTER
+        }
+        root.addView(note,LinearLayout.LayoutParams(-1,-2))
+        setContentView(root)
+    }
+
+    private fun htmlFor(id:String) = """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#p{margin:0;width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="p"></div><script>var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);function onYouTubeIframeAPIReady(){new YT.Player('p',{videoId:'$id',playerVars:{playsinline:1,controls:1,rel:0,fs:1}});}</script></body></html>"""
+}
